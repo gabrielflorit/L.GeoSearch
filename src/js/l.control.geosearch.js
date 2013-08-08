@@ -16,24 +16,18 @@ L.GeoSearch.Result = function (x, y, label) {
 };
 
 L.Control.GeoSearch = L.Control.extend({
+
     options: {
-        position: 'topleft'
+        position: 'topleft',
+        provider: null,
+        searchLabel: 'Enter address',
+        notFoundMessage: 'Sorry, that address could not be found.',
+        zoomLevel: 17,
+        showMarker: true
     },
 
     initialize: function (options) {
-        this._config = {};
         L.Util.extend(this.options, options);
-        this._setConfig(options);
-    },
-
-    _setConfig: function (options) {
-        this._config = {
-            'provider': options.provider,
-            'searchLabel': options.searchLabel || 'Enter address',
-            'notFoundMessage' : options.notFoundMessage || 'Sorry, that address could not be found.',
-            'zoomLevel': options.zoomLevel || 17,
-            'showMarker': typeof options.showMarker !== 'undefined' ? options.showMarker : true,
-        };
     },
 
     resetLink: function(extraClass) {
@@ -49,7 +43,7 @@ L.Control.GeoSearch = L.Control.extend({
         // create the link - this will contain one of the icons
         var link = L.DomUtil.create('a', '', this._container);
         link.href = '#';
-        link.title = this._config.searchLabel;
+        link.title = this.options.searchLabel;
 
         // set the link's icon to magnifying glass
         this.resetLink('glass');
@@ -111,7 +105,7 @@ L.Control.GeoSearch = L.Control.extend({
 
     geosearch: function (qry) {
         try {
-            var provider = this._config.provider;
+            var provider = this.options.provider;
 
             if(typeof provider.GetLocations === 'function') {
                 var results = provider.GetLocations(qry, function(results) {
@@ -139,21 +133,21 @@ L.Control.GeoSearch = L.Control.extend({
 
     _processResults: function(results) {
         if (results.length === 0)
-            throw this._config.notFoundMessage;
+            throw this.options.notFoundMessage;
 
         this._cancelSearch();
         this._showLocation(results[0]);
     },
 
     _showLocation: function (location) {
-        if (this._config.showMarker) {
+        if (this.options.showMarker) {
             if (typeof this._positionMarker === 'undefined')
                 this._positionMarker = L.marker([location.Y, location.X]).addTo(this._map);
             else
                 this._positionMarker.setLatLng([location.Y, location.X]);
         }
 
-        this._map.setView([location.Y, location.X], this._config.zoomLevel, false);
+        this._map.setView([location.Y, location.X], this.options.zoomLevel, false);
     },
 
     _isShowingError: false,
@@ -215,8 +209,6 @@ L.Control.GeoSearch = L.Control.extend({
 
     _onKeyUp: function (e) {
         var escapeKey = 27;
-        var upArrow = 38;
-        var downArrow = 40;
 
         if (e.keyCode === escapeKey) {
             this._cancelSearch();
